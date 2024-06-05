@@ -1,0 +1,287 @@
+from re import T
+from django.db import models
+from django.utils import timezone
+from User.models import User, user_group
+from simple_history.models import HistoricalRecords
+# Create your models here.
+
+
+class currency(models.Model):
+    currency = models.TextField(max_length=50, null=False, unique=True)
+    currency_name = models.TextField(max_length=100, null=False, unique=True)
+    created_by = models.TextField(max_length=200, null=False)
+    altered_by = models.TextField(max_length=200, null=True, blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return self.currency
+
+
+class company_master(models.Model):
+    company_name = models.TextField(max_length=200, unique=True, null=False)
+    address = models.TextField(max_length=1000, null=False)
+    country = models.TextField(max_length=100, null=False)
+    state =  models.TextField(max_length=100, null=False)
+    email = models.EmailField(null=True)
+    website = models.TextField(max_length=1000, null=True)
+    contact_no = models.TextField(max_length=20, null=True)
+    base_currency = models.ForeignKey(to=currency, null=False, on_delete=models.PROTECT)
+    cr_no = models.TextField(max_length=500, null=True)
+    registration_no = models.TextField(max_length=500, null=True)
+    tax_id_no = models.TextField(max_length=500, null=True)
+    vat_id_no = models.TextField(max_length=500, null=True)
+    year_start_date = models.DateField(null=False)
+    year_end_date = models.DateField(null=False)
+    logo = models.FileField(upload_to="logo", null=True)
+    created_by = models.TextField(max_length=200, null=False)
+    altered_by = models.TextField(max_length=200, null=True, blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return self.company_name
+
+
+class user_company(models.Model):
+    user = models.ForeignKey(to=User, null=False, on_delete=models.PROTECT)
+    user_group_id = models.ForeignKey(to=user_group, null=False, on_delete=models.PROTECT)
+    company_master_id = models.ForeignKey(to=company_master, null=False, on_delete=models.PROTECT)
+    created_by = models.TextField(max_length=200, null=False)
+    altered_by = models.TextField(max_length=200, null=True, blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+    class Meta:
+        unique_together = ('user', 'company_master_id',)
+    
+
+class company_master_docs(models.Model): 
+    doc_name = models.TextField(max_length=500, null=False)
+    file = models.FileField(upload_to="files", null=False)
+    company_master_id = models.ForeignKey(to=company_master, null=False, on_delete=models.PROTECT)
+    created_by = models.TextField(max_length=200, null=False)
+    altered_by = models.TextField(max_length=200, null=True, blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return self.doc_name
+
+
+class year_master(models.Model):
+    year_no = models.IntegerField(null=False, default=0)
+    start_date = models.DateField(null=False)
+    end_date = models.DateField(null=False)
+    company_master_id = models.ForeignKey(to=company_master, null=False, on_delete=models.PROTECT)
+    status = models.BooleanField(default=True, null=False)
+    locked = models.BooleanField(default=True, null=False)
+    created_by = models.TextField(max_length=200, null=False)
+    altered_by = models.TextField(max_length=200, null=True, blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        unique_together = ('year_no', 'company_master_id',)
+
+    def __str__(self):
+        return self.year_no
+
+
+class voucher_type(models.Model):
+    voucher_name = models.TextField(max_length=500, null=False)
+    voucher_class = models.TextField(max_length=500, null=False)
+    company_master_id = models.ForeignKey(to=company_master, null=False, on_delete=models.PROTECT)
+    authorization_id = models.ForeignKey(to=User, null=True, on_delete=models.PROTECT)
+    auto_numbering = models.BooleanField(default=False)
+    prefix = models.TextField(max_length=200, null=True)
+    restart = models.TextField(max_length=50, null=True)
+    is_fixed = models.BooleanField(default=True)
+    created_by = models.TextField(max_length=200, null=False)
+    altered_by = models.TextField(max_length=200, null=True, blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        unique_together = ('voucher_name', 'company_master_id',)
+    
+    def __str__(self):
+        return self.voucher_name
+    
+
+class acc_head(models.Model):
+    acc_head_name = models.TextField(max_length=200, null=False)
+    title = models.TextField(max_length=200, null=False)
+    company_master_id = models.ForeignKey(to=company_master, null=False, on_delete=models.PROTECT)
+    bs = models.BooleanField(default=True, null=False)
+    schedule_no = models.IntegerField(null=False)
+    is_fixed = models.BooleanField(default=True)
+    created_by = models.TextField(max_length=200, null=False)
+    altered_by = models.TextField(max_length=200, null=True, blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        unique_together = ('acc_head_name', 'company_master_id',)
+
+    def __str__(self):
+        return self.acc_head_name
+
+
+class acc_group(models.Model):
+    group_name = models.TextField(max_length=1000, null=False)
+    acc_head_id = models.ForeignKey(to=acc_head, related_name='acc_group', null=False, on_delete=models.PROTECT)
+    group_code = models.TextField(max_length=4, null=False)
+    company_master_id = models.ForeignKey(to=company_master, null=False, on_delete=models.PROTECT)
+    #child_of = models.TextField(max_length=1000, null=True)
+    child_of = models.ForeignKey('self', related_name='child', null=True, on_delete=models.PROTECT, blank=True)
+    is_fixed = models.BooleanField(default=True, null=False)
+    created_by = models.TextField(max_length=200, null=False)
+    altered_by = models.TextField(max_length=200, null=True, blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        # testing : pending
+        unique_together = ('group_code', 'company_master_id',)
+        unique_together = ('group_name', 'company_master_id',)
+
+    def __str__(self):
+        return self.group_name
+
+
+class ledger_master(models.Model):
+    acc_group_id = models.ForeignKey(to=acc_group, related_name="ledger_master", null=False, on_delete=models.PROTECT)
+    ledger_id = models.TextField(max_length=200, null=False)
+    old_ledger_id = models.TextField(max_length=200, null=True)
+    ledger_name = models.TextField(max_length=200, null=False)
+    company_master_id = models.ForeignKey(to=company_master, null=False, on_delete=models.PROTECT)
+    maintain_billwise = models.BooleanField(default=True, null=False)
+    address = models.TextField(max_length=1000, null=True)
+    tel = models.TextField(max_length=15, null=True)
+    email = models.EmailField(null=True)
+    contact_person = models.TextField(max_length=50, null=True)
+    bank_name = models.TextField(max_length=250, null=True)
+    branch_name = models.TextField(max_length=250, null=True)
+    bank_code = models.TextField(max_length=250, null=True)
+    bank_ac_no = models.TextField(max_length=250, null=True)
+    credit_limit = models.TextField(max_length=150, null=True)
+    credit_days = models.IntegerField(null=True)
+    credit_rating = models.TextField(max_length=150, null=True)
+    block_ac = models.BooleanField(default=False, null=True)
+    tax_reg_no = models.TextField(max_length=250, null=True)
+    cr_no = models.TextField(max_length=250, null=True)
+    cr_exp_date = models.DateField(null=True)
+    id_no = models.TextField(max_length=250, null=True)
+    id_exp_date = models.DateField(null=True)
+    cc_no = models.TextField(null=True)
+    cc_exp_date = models.DateField(null=True)
+    vat_no = models.TextField(max_length=250, null=True)
+    delivery_terms = models.TextField(max_length=1500, null=True)
+    payment_terms = models.TextField(max_length=1500, null=True)
+    is_fixed = models.BooleanField(default=True)
+    created_by = models.TextField(max_length=200, null=False)
+    altered_by = models.TextField(max_length=200, null=True, blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        unique_together = ('ledger_id', 'company_master_id',)
+
+    def __str__(self):
+        return self.ledger_name
+
+class ledger_master_docs(models.Model): 
+    doc_name = models.TextField(max_length=500, null=False)
+    file = models.FileField(upload_to="ledgerFiles", null=False)
+    ledger_master_id = models.ForeignKey(to=ledger_master, related_name="ledger_docs", null=False, on_delete=models.PROTECT)
+    company_master_id = models.ForeignKey(to=company_master, null=False, on_delete=models.PROTECT)
+    created_by = models.TextField(max_length=200, null=False)
+    altered_by = models.TextField(max_length=200, null=True, blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return self.doc_name
+
+
+class cost_category(models.Model):
+    name = models.TextField(max_length=200, null=False)
+    company_master_id = models.ForeignKey(to=company_master, null=False, on_delete=models.PROTECT)
+    created_by = models.TextField(max_length=200, null=False)
+    altered_by = models.TextField(max_length=200, null=True, blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+
+    class Meta:
+        unique_together = ('name', 'company_master_id',)
+
+    def __str__(self):
+        return self.name
+
+
+class cost_center(models.Model):
+    cost_center_name = models.TextField(max_length=500, null=False)
+    cost_category_id = models.ForeignKey(to=cost_category, related_name="cost_center", null=False, on_delete=models.PROTECT)
+    # child_of = models.TextField(max_length=500, default="primary")
+    child_of = models.ForeignKey('self', related_name='child', null=True, on_delete=models.PROTECT, blank=True)
+    company_master_id = models.ForeignKey(to=company_master, null=False, on_delete=models.PROTECT)
+    altered_by = models.TextField(max_length=200, null=True, blank=True)
+    created_by = models.TextField(max_length=200, null=False)
+    created_on = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
+    
+    class Meta:
+        unique_together = ('cost_center_name', 'company_master_id',)
+    
+    def __str__(self):
+        return self.cost_center_name
+
+
+# models for default data triggered while creating company
+
+class fixed_vouchertype(models.Model):
+    voucher_name = models.TextField(max_length=500, null=False)
+    voucher_class = models.TextField(max_length=500, null=False)
+    auto_numbering = models.BooleanField(default=False)
+    is_fixed = models.BooleanField(default=True)
+    created_by = models.TextField(max_length=200, null=False)
+    created_on = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.voucher_name
+
+
+class fixed_account_head(models.Model):
+    acc_head_name = models.TextField(max_length=200, null=False)
+    title = models.TextField(max_length=200, null=False)
+    bs = models.BooleanField(default=True, null=False)
+    is_fixed = models.BooleanField(default=True)
+    created_by = models.TextField(max_length=200, null=False)
+    created_on = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return self.acc_head_name
+
+
+class fixed_account_group(models.Model):
+    group_name = models.TextField(max_length=1000, null=False)
+    acc_head_id = models.ForeignKey(to=fixed_account_head, null=False, on_delete=models.CASCADE)
+    group_code = models.TextField(max_length=4, null=False)
+    child_of = models.ForeignKey('self', null=True, on_delete=models.CASCADE, blank=True)
+    is_fixed = models.BooleanField(default=True, null=False)
+    created_by = models.TextField(max_length=200, null=False)
+    created_on = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return self.group_name
+
+class fixed_ledger_master(models.Model):
+    acc_group_id = models.ForeignKey(to=fixed_account_group, null=False, on_delete=models.CASCADE)
+    ledger_id = models.TextField(max_length=200, null=False)
+    ledger_name = models.TextField(max_length=200, null=False)
+    maintain_billwise = models.BooleanField(default=True, null=False)
+    is_fixed = models.BooleanField(default=True)
+    created_by = models.TextField(max_length=200, null=False)
+    created_on = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return self.ledger_name
+
+    
