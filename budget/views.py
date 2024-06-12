@@ -7,8 +7,8 @@ from .models import *
 import jwt
 from django.http import JsonResponse
 from .serializers import *
-from Company.models import *
-from Users.models import User, transaction_right, user_group, user_right
+from company.models import *
+from User.models import User, transaction_right, user_group, user_right
 from datetime import date, timedelta
 from django.http.response import HttpResponse
 import PIL
